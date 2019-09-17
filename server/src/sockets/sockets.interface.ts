@@ -12,6 +12,10 @@ export class createMessageDto {
   @IsNotEmpty()
   @IsString()
   date: string
+
+  @IsNotEmpty()
+  @IsString()
+  roomUuid: string
 }
 
 export interface Message {
@@ -19,4 +23,10 @@ export interface Message {
   name: string
   content: string
   date: string
+}
+
+export interface Room {
+  uuid: string
+  name: string
+  messages: Message[]
 }

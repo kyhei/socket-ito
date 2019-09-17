@@ -1,6 +1,6 @@
 <template>
   <section class="section">
-    <nuxt-link to="/chat">Chat page</nuxt-link>
+    <nuxt-link to="/rooms">Rooms page</nuxt-link>
   </section>
 </template>
 
