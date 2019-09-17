@@ -9,8 +9,14 @@ import {
 
 import { Client, Server, Socket } from 'socket.io'
 
+import { MessageService } from './sockets.service'
+import { Body } from '@nestjs/common'
+import { createMessageDto } from './sockets.interface'
+
 @WebSocketGateway(3001)
 export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
+
+  constructor(private readonly messageService: MessageService) { }
 
   @WebSocketServer()
   server: Server
@@ -36,8 +42,24 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('identity')
-  async identify(client: Client, data: number): Promise<number> {
+  async identify(client: Client, data: number) {
     console.log(data)
-    return data
+    return {
+      id: client.id,
+      data,
+    }
+  }
+
+  @SubscribeMessage('fetch all messages')
+  async subscribeFetchAllMessage(socket: Socket) {
+    socket.emit('fetch all messages', this.messageService.getAll())
+    return 'OK'
+  }
+
+  @SubscribeMessage('new message')
+  async subscribeNewMessage(socket: Socket, @Body() message: createMessageDto) {
+    this.messageService.create(message)
+    this.server.emit('new message', this.messageService.getLatestOne())
+    return 'OK'
   }
 }
