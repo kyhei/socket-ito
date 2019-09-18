@@ -32,11 +32,9 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   }
 
   @SubscribeMessage('identity')
-  async identify(client: Client, data: number) {
-    console.log(data)
+  async identify(client: Client) {
     return {
       id: client.id,
-      data,
     }
   }
 
@@ -59,25 +57,34 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     return 'OK'
   }
 
-  @SubscribeMessage('fetch all messages')
-  async subscribeFetchAllMessage(socket: Socket, roomUuid: string) {
-    socket.emit('fetch all messages', this.messageService.getAllMessages(roomUuid))
-    return 'OK'
-  }
-
   @SubscribeMessage('join room')
-  async subscribeJoinRoom(socket: Socket, roomUuid: string) {
-    if (!this.messageService.isExistRoom(roomUuid)) {
+  async subscribeJoinRoom(socket: Socket, params: { roomUuid: string, nickName: string }) {
+    if (!this.messageService.isExistRoom(params.roomUuid)) {
       return 'room is not found'
     }
 
-    socket.join(roomUuid)
-    socket.to(roomUuid).broadcast.emit('join room')
+    socket.join(params.roomUuid)
+    socket.to(params.roomUuid).broadcast.emit('join room', params.nickName)
+
+    this.messageService.joinRoom(
+      params.roomUuid,
+      {
+        nickName: params.nickName,
+        cliendId: socket.client.id,
+      },
+    )
   }
 
   @SubscribeMessage('left room')
   async subscribeLeftRoom(socket: Socket, roomUuid: string) {
-    socket.to(roomUuid).broadcast.emit('left room')
+    const leftMemberName = this.messageService.leftRoom(roomUuid, socket.client.id)
+    socket.to(roomUuid).broadcast.emit('left room', leftMemberName)
+  }
+
+  @SubscribeMessage('fetch all messages')
+  async subscribeFetchAllMessage(socket: Socket, roomUuid: string) {
+    socket.emit('fetch all messages', this.messageService.getAllMessages(roomUuid))
+    return 'OK'
   }
 
   @SubscribeMessage('new message')

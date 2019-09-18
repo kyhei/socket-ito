@@ -6,6 +6,15 @@
       class="mt30"
       @send="onSend"
     />
+    <ModalWindow
+      :show="show"
+      :closeBtn="false"
+      @close="onClose"
+    >
+      <template v-slot:content>
+        <NickName @setName="onSetName" />
+      </template>
+    </ModalWindow>
   </section>
 </template>
 <script lang="ts">
@@ -14,31 +23,39 @@ import { Vue, Component } from 'vue-property-decorator'
 import { Message } from '@/components/Chat/types'
 import ChatForm from '@/components/Chat/Form.vue'
 import ChatTimeline from '@/components/Chat/Timeline.vue'
+import NickName from '@/components/Chat/NickName.vue'
+
+import ModalWindow from '@/components/Common/ModalWindow.vue'
 
 import io from 'socket.io-client'
 
 @Component({
   components: {
     ChatForm,
-    ChatTimeline
+    ChatTimeline,
+    NickName,
+    ModalWindow
   }
 })
 export default class RoomPage extends Vue {
   socket: SocketIOClient.Socket | null = null
   messages: Message[] = []
-  name: string = ''
+  clientId: string = ''
   roomUuid: string = ''
+  nickName: string = ''
+  show: boolean = false
 
   beforeMount() {
     this.roomUuid = this.$route.params.uuid
   }
 
   mounted() {
+    this.openModal()
+  }
+
+  initializeSocket() {
     this.socket = io('http://localhost:3001')
     this.socket.on('join room', this.onJoinRoom)
-
-    this.socket.emit('join room', this.roomUuid)
-
     this.socket.on('connect', this.onConnected)
     this.socket.on('exception', this.onException)
     this.socket.on('disconnect', this.onDisConnected)
@@ -47,18 +64,38 @@ export default class RoomPage extends Vue {
     this.socket.on('new message', this.onChat)
     this.socket.on('fetch all messages', this.onFetchAllMessages)
 
-    this.socket.emit('fetch all messages', this.roomUuid)
-
-    this.socket.emit('identity', 0, (response: any) => {
+    this.socket.emit('identity', (response: any) => {
       console.log('Identity:', response)
-      this.name = response.id
+      this.clientId = response.id
     })
+
+    this.socket.emit('join room', {
+      roomUuid: this.roomUuid,
+      nickName: this.nickName
+    })
+
+    this.socket.emit('fetch all messages', this.roomUuid)
+  }
+
+  /** modal controll */
+  openModal() {
+    this.show = true
+  }
+
+  onClose() {
+    this.show = false
+  }
+  /** modal controll end */
+
+  onSetName(nickName: string) {
+    this.nickName = nickName
+    this.initializeSocket()
+    this.onClose()
   }
 
   /** websocket callbacks */
-  onJoinRoom() {
-    console.log('success for joining room!')
-    this.$store.commit('notification/setMessage', 'someone is joined')
+  onJoinRoom(friendName: string) {
+    this.$store.commit('notification/setMessage', `${friendName} is joined`)
   }
 
   onConnected() {
@@ -78,9 +115,8 @@ export default class RoomPage extends Vue {
     this.$store.commit('notification/setMessage', 'someone is joined')
   }
 
-  onLeave() {
-    console.log('someone is left')
-    this.$store.commit('notification/setMessage', 'someone is left')
+  onLeave(nickName: string) {
+    this.$store.commit('notification/setMessage', `${nickName} is left`)
   }
 
   onChat(message: Message) {
@@ -98,7 +134,7 @@ export default class RoomPage extends Vue {
     }
 
     this.socket.emit('new message', {
-      name: this.name,
+      name: this.clientId,
       content: message,
       date: new Date().toISOString().slice(0.19),
       roomUuid: this.roomUuid

@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common'
-import { createMessageDto, Message, Room } from './sockets.interface'
+import { createMessageDto, Message, Room, User } from './sockets.interface'
 
 @Injectable()
 export class MessageService {
@@ -22,7 +22,7 @@ export class MessageService {
     }
     this.rooms[roomIndex].messages.push({
       id: this.rooms[roomIndex].messages.length + 1,
-      name: messageDto.name,
+      name: this.getUserNickName(messageDto.roomUuid, messageDto.name),
       content: messageDto.content,
       date: messageDto.date,
     })
@@ -34,7 +34,30 @@ export class MessageService {
       name,
       uuid,
       messages: [],
+      users: {},
     })
+  }
+
+  joinRoom(uuid: string, user: User) {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return
+    }
+
+    room.users[user.cliendId] = user.nickName
+  }
+
+  leftRoom(uuid: string, cliendId: string): string {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
+      return
+    }
+
+    const nickName = this.rooms[roomIndex].users[cliendId]
+
+    delete this.rooms[roomIndex].users[cliendId]
+
+    return nickName
   }
 
   isExistRoom(uuid: string): boolean {
@@ -81,7 +104,16 @@ export class MessageService {
     return this.rooms.slice(-1)[0]
   }
 
-  private generateUuid() {
+  private getUserNickName(uuid: string, clientId: string): string {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room || room.users[clientId] === undefined) {
+      return ''
+    }
+
+    return room.users[clientId]
+  }
+
+  private generateUuid(): string {
     // https://github.com/GoogleChrome/chrome-platform-analytics/blob/master/src/internal/identifier.js
     // const FORMAT: string = "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx";
     const chars = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.split('')

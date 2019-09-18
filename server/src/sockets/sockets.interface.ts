@@ -29,4 +29,12 @@ export interface Room {
   uuid: string
   name: string
   messages: Message[]
+  users: {
+    [K in string]: string
+  }
+}
+
+export interface User {
+  cliendId: string
+  nickName: string
 }
