@@ -39,7 +39,7 @@ export default class ChatTimeline extends Vue {
 </script>
 <style lang="scss" scoped>
 .timeline {
-  height: 180px;
+  height: 60px;
   overflow-y: scroll;
   border-top: 1px solid #e9e9e9;
   border-bottom: 1px solid #e9e9e9;

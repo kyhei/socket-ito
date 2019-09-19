@@ -227,6 +227,15 @@ export class MessageService {
     }
 
     this.rooms[roomIndex].numbers = []
+
+    for (const clientId in this.rooms[roomIndex].users) {
+      if (this.rooms[roomIndex].users[clientId] === undefined) {
+        continue
+      }
+
+      this.rooms[roomIndex].users[clientId].ready = false
+      this.rooms[roomIndex].users[clientId].put = false
+    }
   }
 
   private getUserNickName(uuid: string, clientId: string): string {

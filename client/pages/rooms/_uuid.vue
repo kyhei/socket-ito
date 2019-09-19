@@ -21,7 +21,7 @@
         />
         <PutOutButton
           @put="putNumberCard"
-          :disable="isPut"
+          :disable="isPut || !isGameStarted"
         />
       </div>
     </div>
@@ -29,10 +29,22 @@
     <ModalWindow
       :show="show"
       :closeBtn="false"
-      @close="onClose"
     >
       <template v-slot:content>
         <NickName @setName="onSetName" />
+      </template>
+    </ModalWindow>
+
+    <ModalWindow
+      :show="isGameFinish"
+      :closeBtn="false"
+    >
+      <template v-slot:content>
+        <GameResult
+          :numbers="numbers"
+          :resultText="resultText"
+          @next-game="resetState"
+        />
       </template>
     </ModalWindow>
   </section>
@@ -52,6 +64,7 @@ import NumberCard from '@/components/Ito/NumberCard.vue'
 import ReadyButton from '@/components/Ito/ReadyButton.vue'
 import PutOutButton from '@/components/Ito/PutOutButton.vue'
 import Timeline from '@/components/Ito/Timeline.vue'
+import GameResult from '@/components/Ito/GameResult.vue'
 
 import io from 'socket.io-client'
 
@@ -65,7 +78,8 @@ import io from 'socket.io-client'
     NumberCard,
     ReadyButton,
     PutOutButton,
-    Timeline
+    Timeline,
+    GameResult
   }
 })
 export default class RoomPage extends Vue {
@@ -76,10 +90,13 @@ export default class RoomPage extends Vue {
   nickName: string = ''
   show: boolean = false
   isGameStarted: boolean = false
+  isGameFinish: boolean = false
   isReady: boolean = false
   isPut: boolean = false
   theme: string = 'じゅんびちゅう。。。'
   numberCard: number = 0
+  numbers: number[] = []
+  resultText: string = ''
 
   beforeMount() {
     this.roomUuid = this.$route.params.uuid
@@ -137,6 +154,18 @@ export default class RoomPage extends Vue {
       num: this.numberCard
     })
     this.isPut = true
+  }
+
+  resetState() {
+    console.log('resetState is called')
+    this.numberCard = 0
+    this.isReady = false
+    this.isPut = false
+    this.isGameStarted = false
+    this.isGameFinish = false
+    this.theme = 'じゅんびちゅう。。。'
+    this.numbers = []
+    this.resultText = ''
   }
 
   /** modal controll */
@@ -246,9 +275,21 @@ export default class RoomPage extends Vue {
   }
 
   onGameEnd(result: { win: boolean; result: number[] }) {
-    console.log(result)
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `Finish!!`,
+      date: new Date().toISOString().slice(0.19)
+    })
+
+    const message = result.win ? 'You Win!!' : 'You Lose...'
+    this.$store.commit('notification/setMessage', message)
+    this.numbers = result.result
+    this.resultText = message
+    this.isGameFinish = true
   }
   /** websocket callbacks end */
+
+  /** vue life cycle hooks */
 
   beforeDestroy() {
     if (this.socket === null) {
@@ -257,9 +298,14 @@ export default class RoomPage extends Vue {
     this.socket.emit('left room', this.roomUuid)
     this.socket.close()
   }
+
+  /** vue life cycle hooks  end */
 }
 </script>
 <style lang="scss" scoped>
+.section {
+  padding-top: 1rem;
+}
 .control-area {
   display: grid;
   grid-template-columns: 1fr 1fr;

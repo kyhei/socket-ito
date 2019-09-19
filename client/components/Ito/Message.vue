@@ -2,11 +2,7 @@
   <article class="media">
     <div class="media-content">
       <div class="content">
-        <p>
-          {{ content }}
-          <br />
-          <small>{{ date }}</small>
-        </p>
+        <small>{{ content }}</small>
       </div>
     </div>
   </article>
@@ -20,3 +16,9 @@ export default class ChatMessage extends Vue {
   @Prop({ default: '' }) date!: string
 }
 </script>
+<style lang="scss" scoped>
+.media {
+  margin-top: 0;
+  padding-top: 0;
+}
+</style>
