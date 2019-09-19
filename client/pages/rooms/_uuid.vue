@@ -41,6 +41,7 @@
     >
       <template v-slot:content>
         <GameResult
+          :mynumber="numberCard"
           :numbers="numbers"
           :resultText="resultText"
           @next-game="resetState"
@@ -191,7 +192,7 @@ export default class RoomPage extends Vue {
     //this.$store.commit('notification/setMessage', `${friendName} is joined`)
     this.messages.push({
       id: this.messages.length + 1,
-      content: `${friendName} is joined!`,
+      content: `${friendName} が入室しました！`,
       date: new Date().toISOString().slice(0.19)
     })
   }
@@ -219,7 +220,7 @@ export default class RoomPage extends Vue {
     // this.$store.commit('notification/setMessage', `${nickName} is left`)
     this.messages.push({
       id: this.messages.length + 1,
-      content: `${nickName} is left`,
+      content: `${nickName} が退出しました`,
       date: new Date().toISOString().slice(0.19)
     })
   }
@@ -249,7 +250,7 @@ export default class RoomPage extends Vue {
   onUserReady(nickName: string) {
     this.messages.push({
       id: this.messages.length + 1,
-      content: `${nickName} is ready!`,
+      content: `${nickName} の準備が整いました。`,
       date: new Date().toISOString().slice(0.19)
     })
   }
@@ -271,7 +272,7 @@ export default class RoomPage extends Vue {
   onPutNumberCard(nickName: string) {
     this.messages.push({
       id: this.messages.length + 1,
-      content: `${nickName} put number!`,
+      content: `${nickName} がカードを出しました！`,
       date: new Date().toISOString().slice(0.19)
     })
   }

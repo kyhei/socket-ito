@@ -1,26 +1,40 @@
 <template>
   <section class="section">
-    <h3 class="subtitle is-3">These are available rooms</h3>
+    <h5 class="subtitle is-5">
+      ルームを作成
+      <br />あるいは入室しましょう！
+    </h5>
 
-    <ul>
-      <li
+    <div class="field has-addons">
+      <div class="control">
+        <input
+          class="input"
+          type="text"
+          placeholder="room name"
+          v-model="roomName"
+        />
+      </div>
+      <div class="control">
+        <button
+          class="button is-primary"
+          @click="createRoom"
+        >Create Room</button>
+      </div>
+    </div>
+
+    <div
+      v-if="rooms.length > 0"
+      class="rooms"
+    >
+      <div class="is-small">here is rooms...</div>
+      <nuxt-link
         v-for="room in rooms"
         :key="room.uuid"
-      >
-        <nuxt-link :to="`/rooms/${room.uuid}`">{{room.name}}</nuxt-link>
-      </li>
-    </ul>
-
-    <input
-      class="input mt30"
-      type="text"
-      placeholder="Insert your room name"
-      v-model="roomName"
-    />
-    <button
-      class="button is-primary mt8"
-      @click="createRoom"
-    >Create Room</button>
+        :to="`/rooms/${room.uuid}`"
+        class="button is-link"
+      >Join {{room.name}} room</nuxt-link>
+    </div>
+    <p v-else>ルームを作成しましょう！</p>
 
     <nuxt-child />
   </section>
@@ -78,3 +92,13 @@ export default class RoomsPage extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.section {
+  padding-top: 1rem;
+}
+.rooms {
+  margin-top: 12px;
+  display: grid;
+  gap: 20px;
+}
+</style>

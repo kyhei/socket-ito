@@ -4,6 +4,7 @@
     <div class="cards">
       <div
         class="card"
+        :class="(mynumber == num)? 'my':''"
         v-for="num in numbers"
         :key="num"
       >
@@ -23,6 +24,7 @@ import { Vue, Component, Prop } from 'vue-property-decorator'
 
 @Component
 export default class GameResultComponent extends Vue {
+  @Prop({ default: 0 }) mynumber!: number
   @Prop({ default: [] }) numbers!: number[]
   @Prop({ default: '' }) resultText!: string
 
@@ -60,6 +62,10 @@ export default class GameResultComponent extends Vue {
 
     &:not(:first-of-type) {
       margin-left: 16px;
+    }
+
+    &.my {
+      background-color: #a7ffeb;
     }
   }
 }
