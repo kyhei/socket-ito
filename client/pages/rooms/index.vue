@@ -29,6 +29,8 @@
 import { Vue, Component } from 'vue-property-decorator'
 import io from 'socket.io-client'
 
+import { SOCKETHOST } from '@/utilities'
+
 interface Room {
   uuid: string
   name: string
@@ -41,7 +43,7 @@ export default class RoomsPage extends Vue {
   roomName: string = ''
 
   mounted() {
-    this.socket = io('http://localhost:3001')
+    this.socket = io(SOCKETHOST)
     this.socket.on('fetch all rooms', this.onFetchAllRooms)
     this.socket.on('create room', this.onCreateRoom)
 

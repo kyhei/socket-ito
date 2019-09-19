@@ -66,6 +66,8 @@ import PutOutButton from '@/components/Ito/PutOutButton.vue'
 import Timeline from '@/components/Ito/Timeline.vue'
 import GameResult from '@/components/Ito/GameResult.vue'
 
+import { SOCKETHOST } from '@/utilities'
+
 import io from 'socket.io-client'
 
 @Component({
@@ -107,7 +109,7 @@ export default class RoomPage extends Vue {
   }
 
   initializeSocket() {
-    this.socket = io('http://localhost:3001')
+    this.socket = io(SOCKETHOST)
     this.socket.on('join room', this.onJoinRoom)
     this.socket.on('connect', this.onConnected)
     this.socket.on('exception', this.onException)

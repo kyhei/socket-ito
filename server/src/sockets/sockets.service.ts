@@ -211,6 +211,15 @@ export class MessageService {
     return true
   }
 
+  isRoomEmpty(uuid: string): boolean {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
+      return false
+    }
+
+    return (Object.keys(this.rooms[roomIndex].users).length === 0) ? true : false
+  }
+
   getResult(uuid: string) {
     const room = this.rooms.find(item => item.uuid === uuid)
     if (!room) {
@@ -218,6 +227,15 @@ export class MessageService {
     }
 
     return room.numbers
+  }
+
+  removeRoom(uuid: string) {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
+      return
+    }
+
+    this.rooms.splice(roomIndex, 1)
   }
 
   resetResult(uuid: string) {

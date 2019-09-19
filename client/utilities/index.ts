@@ -1,0 +1,1 @@
+export const SOCKETHOST = 'http://localhost:3001'

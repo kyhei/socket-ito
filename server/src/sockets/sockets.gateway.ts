@@ -80,6 +80,17 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async subscribeLeftRoom(socket: Socket, roomUuid: string) {
     const leftMemberName = this.messageService.leftRoom(roomUuid, socket.id)
     socket.to(roomUuid).broadcast.emit('left room', leftMemberName)
+
+    if (this.messageService.isRoomEmpty(roomUuid)) {
+      this.messageService.removeRoom(roomUuid)
+      this.server.emit(
+        'fetch all rooms',
+        this.messageService.getAllRooms().map(room => ({
+          uuid: room.uuid,
+          name: room.name,
+        })),
+      )
+    }
   }
 
   @SubscribeMessage('user ready')
