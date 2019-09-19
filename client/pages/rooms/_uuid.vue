@@ -26,6 +26,13 @@
       </div>
     </div>
 
+    <div class="exit-area">
+      <nuxt-link
+        to="/rooms"
+        class="button is-danger"
+      >Exit Room</nuxt-link>
+    </div>
+
     <ModalWindow
       :show="show"
       :closeBtn="false"
@@ -119,6 +126,7 @@ export default class RoomPage extends Vue {
     //this.socket.on('new message', this.onChat)
     //this.socket.on('fetch all messages', this.onFetchAllMessages)
 
+    this.socket.on('get room members', this.onGetRoomMembers)
     this.socket.on('user ready', this.onUserReady)
     this.socket.on('game start', this.onGameStart)
     this.socket.on('fetch number card', this.onFetchNumberCard)
@@ -195,6 +203,16 @@ export default class RoomPage extends Vue {
       content: `${friendName} が入室しました！`,
       date: new Date().toISOString().slice(0.19)
     })
+  }
+
+  onGetRoomMembers(memberNames: string[]) {
+    for (const memberName of memberNames) {
+      this.messages.push({
+        id: this.messages.length + 1,
+        content: `${memberName} と合流しました！`,
+        date: new Date().toISOString().slice(0.19)
+      })
+    }
   }
 
   onConnected() {
@@ -320,5 +338,11 @@ export default class RoomPage extends Vue {
     flex-direction: column;
     justify-content: space-around;
   }
+}
+
+.exit-area {
+  margin-top: 24px;
+  display: flex;
+  justify-content: center;
 }
 </style>

@@ -66,6 +66,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
     socket.join(params.roomUuid)
     socket.to(params.roomUuid).broadcast.emit('join room', params.nickName)
+    socket.emit('get room members', this.messageService.getRoomMembersNames(params.roomUuid))
 
     this.messageService.joinRoom(
       params.roomUuid,

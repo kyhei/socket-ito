@@ -175,6 +175,25 @@ export class MessageService {
     return this.rooms[roomIndex].users[clientId].nickName
   }
 
+  getRoomMembersNames(uuid: string): string[] {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return []
+    }
+
+    const names: string[] = []
+    for (const cliendId in room.users) {
+
+      if (room.users[cliendId] === undefined) {
+        continue
+      }
+      names.push(room.users[cliendId].nickName)
+    }
+
+    return names
+
+  }
+
   getOdai(): string {
     return this.odai[Math.floor(Math.random() * this.odai.length)]
   }
