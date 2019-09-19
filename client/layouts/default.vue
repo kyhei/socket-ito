@@ -2,9 +2,13 @@
   <div>
     <transition name="fade">
       <div
-        class="notification is-info is-fix"
+        class="wrapper is-fix"
         v-if="isShow"
-      >{{ message }}</div>
+      >
+        <div class="notification is-info">
+          <p>{{ message }}</p>
+        </div>
+      </div>
     </transition>
 
     <section class="hero is-primary">
@@ -46,6 +50,21 @@ export default class DefaultLayout extends Vue {
 }
 </script>
 <style lang="scss" scoped>
+.wrapper {
+  height: 100%;
+  width: 100vw;
+  display: flex;
+  .notification {
+    margin: auto;
+    width: 80%;
+    height: 100px;
+    display: flex;
+    p {
+      margin: auto;
+      font-size: 24px;
+    }
+  }
+}
 .is-fix {
   position: fixed;
   z-index: 2;

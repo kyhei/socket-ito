@@ -1,11 +1,31 @@
 <template>
   <section class="section">
-    <div>{{ $route.params.uuid}}</div>
+    <!--
     <ChatTimeline :messages="messages" />
     <ChatForm
       class="mt30"
       @send="onSend"
     />
+    -->
+    <Timeline :messages="messages" />
+    <Theme
+      :theme="theme"
+      class="mt8"
+    />
+    <div class="control-area">
+      <NumberCard :numberText="numberCard" />
+      <div class="buttons">
+        <ReadyButton
+          @ready="ready"
+          :disable="isReady"
+        />
+        <PutOutButton
+          @put="putNumberCard"
+          :disable="isPut"
+        />
+      </div>
+    </div>
+
     <ModalWindow
       :show="show"
       :closeBtn="false"
@@ -20,21 +40,32 @@
 <script lang="ts">
 import { Vue, Component } from 'vue-property-decorator'
 
-import { Message } from '@/components/Chat/types'
-import ChatForm from '@/components/Chat/Form.vue'
-import ChatTimeline from '@/components/Chat/Timeline.vue'
+// import ChatForm from '@/components/Chat/Form.vue'
+// import ChatTimeline from '@/components/Chat/Timeline.vue'
 import NickName from '@/components/Chat/NickName.vue'
 
 import ModalWindow from '@/components/Common/ModalWindow.vue'
+
+import { Message } from '@/components/Ito/types'
+import Theme from '@/components/Ito/Theme.vue'
+import NumberCard from '@/components/Ito/NumberCard.vue'
+import ReadyButton from '@/components/Ito/ReadyButton.vue'
+import PutOutButton from '@/components/Ito/PutOutButton.vue'
+import Timeline from '@/components/Ito/Timeline.vue'
 
 import io from 'socket.io-client'
 
 @Component({
   components: {
-    ChatForm,
-    ChatTimeline,
+    // ChatForm,
+    // ChatTimeline,
     NickName,
-    ModalWindow
+    ModalWindow,
+    Theme,
+    NumberCard,
+    ReadyButton,
+    PutOutButton,
+    Timeline
   }
 })
 export default class RoomPage extends Vue {
@@ -44,6 +75,11 @@ export default class RoomPage extends Vue {
   roomUuid: string = ''
   nickName: string = ''
   show: boolean = false
+  isGameStarted: boolean = false
+  isReady: boolean = false
+  isPut: boolean = false
+  theme: string = 'じゅんびちゅう。。。'
+  numberCard: number = 0
 
   beforeMount() {
     this.roomUuid = this.$route.params.uuid
@@ -59,10 +95,15 @@ export default class RoomPage extends Vue {
     this.socket.on('connect', this.onConnected)
     this.socket.on('exception', this.onException)
     this.socket.on('disconnect', this.onDisConnected)
-    this.socket.on('join', this.onJoin)
     this.socket.on('left room', this.onLeave)
-    this.socket.on('new message', this.onChat)
-    this.socket.on('fetch all messages', this.onFetchAllMessages)
+    //this.socket.on('new message', this.onChat)
+    //this.socket.on('fetch all messages', this.onFetchAllMessages)
+
+    this.socket.on('user ready', this.onUserReady)
+    this.socket.on('game start', this.onGameStart)
+    this.socket.on('fetch number card', this.onFetchNumberCard)
+    this.socket.on('put number card', this.onPutNumberCard)
+    this.socket.on('game end', this.onGameEnd)
 
     this.socket.emit('identity', (response: any) => {
       console.log('Identity:', response)
@@ -74,7 +115,28 @@ export default class RoomPage extends Vue {
       nickName: this.nickName
     })
 
-    this.socket.emit('fetch all messages', this.roomUuid)
+    //this.socket.emit('fetch all messages', this.roomUuid)
+  }
+
+  ready() {
+    if (this.socket === null) {
+      return
+    }
+
+    this.socket.emit('user ready', this.roomUuid)
+    this.isReady = true
+  }
+
+  putNumberCard() {
+    if (this.socket === null) {
+      return
+    }
+
+    this.socket.emit('put number card', {
+      roomUuid: this.roomUuid,
+      num: this.numberCard
+    })
+    this.isPut = true
   }
 
   /** modal controll */
@@ -95,7 +157,12 @@ export default class RoomPage extends Vue {
 
   /** websocket callbacks */
   onJoinRoom(friendName: string) {
-    this.$store.commit('notification/setMessage', `${friendName} is joined`)
+    //this.$store.commit('notification/setMessage', `${friendName} is joined`)
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `${friendName} is joined!`,
+      date: new Date().toISOString().slice(0.19)
+    })
   }
 
   onConnected() {
@@ -110,13 +177,20 @@ export default class RoomPage extends Vue {
     console.log('error', err)
   }
 
+  /*
   onJoin() {
     console.log('someone is joined')
     this.$store.commit('notification/setMessage', 'someone is joined')
   }
+  */
 
   onLeave(nickName: string) {
-    this.$store.commit('notification/setMessage', `${nickName} is left`)
+    // this.$store.commit('notification/setMessage', `${nickName} is left`)
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `${nickName} is left`,
+      date: new Date().toISOString().slice(0.19)
+    })
   }
 
   onChat(message: Message) {
@@ -140,6 +214,40 @@ export default class RoomPage extends Vue {
       roomUuid: this.roomUuid
     })
   }
+
+  onUserReady(nickName: string) {
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `${nickName} is ready!`,
+      date: new Date().toISOString().slice(0.19)
+    })
+  }
+
+  onGameStart(odai: string) {
+    this.isGameStarted = true
+    this.theme = odai
+    this.$store.commit('notification/setMessage', `Game is start!!`)
+
+    if (this.socket !== null) {
+      this.socket.emit('fetch number card')
+    }
+  }
+
+  onFetchNumberCard(numberCard: number) {
+    this.numberCard = numberCard
+  }
+
+  onPutNumberCard(nickName: string) {
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `${nickName} put number!`,
+      date: new Date().toISOString().slice(0.19)
+    })
+  }
+
+  onGameEnd(result: { win: boolean; result: number[] }) {
+    console.log(result)
+  }
   /** websocket callbacks end */
 
   beforeDestroy() {
@@ -151,3 +259,17 @@ export default class RoomPage extends Vue {
   }
 }
 </script>
+<style lang="scss" scoped>
+.control-area {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 30px;
+  margin-top: 32px;
+
+  .buttons {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-around;
+  }
+}
+</style>

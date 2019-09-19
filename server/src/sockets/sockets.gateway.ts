@@ -7,7 +7,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets'
 
-import { Client, Server, Socket } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 
 import { MessageService } from './sockets.service'
 import { Body } from '@nestjs/common'
@@ -28,13 +28,14 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   handleDisconnect(socket: Socket) {
     console.log('someone is leave')
+    this.messageService.disconnectUser(socket.id)
     // socket.broadcast.emit('leave', 'leave event is emitted')
   }
 
   @SubscribeMessage('identity')
-  async identify(client: Client) {
+  async identify(socket: Socket) {
     return {
-      id: client.id,
+      id: socket.id,
     }
   }
 
@@ -70,15 +71,47 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
       params.roomUuid,
       {
         nickName: params.nickName,
-        cliendId: socket.client.id,
+        cliendId: socket.id,
       },
     )
   }
 
   @SubscribeMessage('left room')
   async subscribeLeftRoom(socket: Socket, roomUuid: string) {
-    const leftMemberName = this.messageService.leftRoom(roomUuid, socket.client.id)
+    const leftMemberName = this.messageService.leftRoom(roomUuid, socket.id)
     socket.to(roomUuid).broadcast.emit('left room', leftMemberName)
+  }
+
+  @SubscribeMessage('user ready')
+  async subscribeReadyUser(socket: Socket, roomUuid: string) {
+    const nickName = this.messageService.setReadyUser(roomUuid, socket.id)
+    this.server.to(roomUuid).emit('user ready', nickName)
+
+    if (this.messageService.isAllUsersAreReady(roomUuid)) {
+      this.server.to(roomUuid).emit('game start', this.messageService.getOdai())
+      this.messageService.changeRoomCondition(roomUuid, 'playing')
+    }
+  }
+
+  @SubscribeMessage('fetch number card')
+  async subscribeFetchNumberCard(socket: Socket) {
+    socket.emit('fetch number card', this.messageService.getNumberCard())
+    return 'OK'
+  }
+
+  @SubscribeMessage('put number card')
+  async subscribePutNumberCard(socket: Socket, params: { roomUuid: string, num: number }) {
+    const nickName = this.messageService.putNumberCard(params.roomUuid, socket.id, params.num)
+    this.server.to(params.roomUuid).emit('put number card', nickName)
+
+    if (this.messageService.isAllUsersArePut(params.roomUuid)) {
+      this.server.to(params.roomUuid).emit('game end', {
+        win: this.messageService.isWin(params.roomUuid),
+        result: this.messageService.getResult(params.roomUuid),
+      })
+      this.messageService.changeRoomCondition(params.roomUuid, 'end')
+      this.messageService.resetResult(params.roomUuid)
+    }
   }
 
   @SubscribeMessage('fetch all messages')

@@ -1,10 +1,12 @@
 import { Injectable } from '@nestjs/common'
 import { createMessageDto, Message, Room, User } from './sockets.interface'
+import { odai } from './sockets.odai'
 
 @Injectable()
 export class MessageService {
   private readonly messages: Message[] = []
   private readonly rooms: Room[] = []
+  private readonly odai = odai
 
   create(messageDto: createMessageDto) {
     this.messages.push({
@@ -35,6 +37,8 @@ export class MessageService {
       uuid,
       messages: [],
       users: {},
+      cond: 'before',
+      numbers: [],
     })
   }
 
@@ -44,7 +48,11 @@ export class MessageService {
       return
     }
 
-    room.users[user.cliendId] = user.nickName
+    room.users[user.cliendId] = {
+      nickName: user.nickName,
+      ready: false,
+      put: false,
+    }
   }
 
   leftRoom(uuid: string, cliendId: string): string {
@@ -53,11 +61,23 @@ export class MessageService {
       return
     }
 
-    const nickName = this.rooms[roomIndex].users[cliendId]
+    const nickName = this.rooms[roomIndex].users[cliendId].nickName
 
     delete this.rooms[roomIndex].users[cliendId]
 
     return nickName
+  }
+
+  disconnectUser(cliendId: string) {
+    const roomIndex = this.rooms.findIndex(item => {
+      return item.users[cliendId] !== undefined
+    })
+
+    if (roomIndex === -1) {
+      return
+    }
+
+    delete this.rooms[roomIndex].users[cliendId]
   }
 
   isExistRoom(uuid: string): boolean {
@@ -68,6 +88,46 @@ export class MessageService {
     }
 
     return true
+  }
+
+  isAllUsersAreReady(uuid: string): boolean {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return false
+    }
+
+    for (const cliendId in room.users) {
+      if (room.users[cliendId].ready === false) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  isAllUsersArePut(uuid: string): boolean {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return false
+    }
+
+    for (const cliendId in room.users) {
+      if (room.users[cliendId].put === false) {
+        return false
+      }
+    }
+
+    return true
+  }
+
+  changeRoomCondition(uuid: string, state: Room['cond']) {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
+      return
+    }
+
+    this.rooms[roomIndex].cond = state
+
   }
 
   getAll(): Message[] {
@@ -104,13 +164,78 @@ export class MessageService {
     return this.rooms.slice(-1)[0]
   }
 
+  setReadyUser(uuid: string, clientId: string): string {
+    const roomIndex = this.rooms.findIndex(room => room.uuid === uuid)
+    if (roomIndex === -1) {
+      return
+    }
+
+    this.rooms[roomIndex].users[clientId].ready = true
+
+    return this.rooms[roomIndex].users[clientId].nickName
+  }
+
+  getOdai(): string {
+    return this.odai[Math.floor(Math.random() * this.odai.length)]
+  }
+
+  getNumberCard(): number {
+    return 1 + Math.floor(Math.random() * 100)
+  }
+
+  putNumberCard(uuid: string, cliendId: string, num: number): string {
+    const roomIndex = this.rooms.findIndex(room => room.uuid === uuid)
+    if (roomIndex === -1) {
+      return ''
+    }
+
+    this.rooms[roomIndex].users[cliendId].put = true
+    this.rooms[roomIndex].numbers.push(num)
+
+    return this.rooms[roomIndex].users[cliendId].nickName
+  }
+
+  isWin(uuid: string): boolean {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return false
+    }
+
+    for (let i = 0; i < room.numbers.length - 1; i++) {
+      if (room.numbers[i] < room.numbers[i + 1]) {
+        continue
+      }
+      return false
+    }
+
+    return true
+  }
+
+  getResult(uuid: string) {
+    const room = this.rooms.find(item => item.uuid === uuid)
+    if (!room) {
+      return false
+    }
+
+    return room.numbers
+  }
+
+  resetResult(uuid: string) {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
+      return false
+    }
+
+    this.rooms[roomIndex].numbers = []
+  }
+
   private getUserNickName(uuid: string, clientId: string): string {
     const room = this.rooms.find(item => item.uuid === uuid)
     if (!room || room.users[clientId] === undefined) {
       return ''
     }
 
-    return room.users[clientId]
+    return room.users[clientId].nickName
   }
 
   private generateUuid(): string {

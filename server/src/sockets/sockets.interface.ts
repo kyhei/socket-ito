@@ -30,8 +30,14 @@ export interface Room {
   name: string
   messages: Message[]
   users: {
-    [K in string]: string
+    [K in string]: {
+      nickName: string,
+      ready: boolean,
+      put: boolean,
+    }
   }
+  cond: 'before' | 'playing' | 'end'
+  numbers: number[]
 }
 
 export interface User {
