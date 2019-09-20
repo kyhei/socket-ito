@@ -44,3 +44,7 @@ export interface User {
   cliendId: string
   nickName: string
 }
+
+export interface Odai {
+  content: string,
+}

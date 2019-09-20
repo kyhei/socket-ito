@@ -74,7 +74,7 @@ import PutOutButton from '@/components/Ito/PutOutButton.vue'
 import Timeline from '@/components/Ito/Timeline.vue'
 import GameResult from '@/components/Ito/GameResult.vue'
 
-import { SOCKETHOST } from '@/utilities'
+import { SOCKETPORT } from '@/utilities'
 
 import io from 'socket.io-client'
 
@@ -117,7 +117,7 @@ export default class RoomPage extends Vue {
   }
 
   initializeSocket() {
-    this.socket = io(SOCKETHOST)
+    this.socket = io(`http://${location.hostname}:${SOCKETPORT}`)
     this.socket.on('join room', this.onJoinRoom)
     this.socket.on('connect', this.onConnected)
     this.socket.on('exception', this.onException)
@@ -303,7 +303,7 @@ export default class RoomPage extends Vue {
     })
 
     const message = result.win ? 'You Win!!' : 'You Lose...'
-    this.$store.commit('notification/setMessage', message)
+    // this.$store.commit('notification/setMessage', message)
     this.numbers = result.result
     this.resultText = message
     this.isGameFinish = true

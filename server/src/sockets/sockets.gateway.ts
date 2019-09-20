@@ -100,7 +100,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     this.server.to(roomUuid).emit('user ready', nickName)
 
     if (this.messageService.isAllUsersAreReady(roomUuid)) {
-      this.server.to(roomUuid).emit('game start', this.messageService.getOdai())
+      this.server.to(roomUuid).emit('game start', this.messageService.getOdai(roomUuid))
       this.messageService.changeRoomCondition(roomUuid, 'playing')
     }
   }

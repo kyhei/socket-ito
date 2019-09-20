@@ -26,7 +26,7 @@
       v-if="rooms.length > 0"
       class="rooms"
     >
-      <div class="is-small">here is rooms...</div>
+      <div class="is-small">入室可能なルームはこちら</div>
       <nuxt-link
         v-for="room in rooms"
         :key="room.uuid"
@@ -43,7 +43,7 @@
 import { Vue, Component } from 'vue-property-decorator'
 import io from 'socket.io-client'
 
-import { SOCKETHOST } from '@/utilities'
+import { SOCKETPORT } from '@/utilities'
 
 interface Room {
   uuid: string
@@ -57,7 +57,7 @@ export default class RoomsPage extends Vue {
   roomName: string = ''
 
   mounted() {
-    this.socket = io(SOCKETHOST)
+    this.socket = io(`http://${location.hostname}:${SOCKETPORT}`)
     this.socket.on('fetch all rooms', this.onFetchAllRooms)
     this.socket.on('create room', this.onCreateRoom)
 

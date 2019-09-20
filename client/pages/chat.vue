@@ -14,7 +14,7 @@ import { Message } from '@/components/Chat/types'
 import ChatForm from '@/components/Chat/Form.vue'
 import ChatTimeline from '@/components/Chat/Timeline.vue'
 
-import { SOCKETHOST } from '@/utilities'
+import { SOCKETPORT } from '@/utilities'
 
 import io from 'socket.io-client'
 
@@ -30,7 +30,7 @@ export default class IndexPage extends Vue {
   name: string = ''
 
   mounted() {
-    this.socket = io(SOCKETHOST)
+    this.socket = io(`http://${location.hostname}:${SOCKETPORT}`)
     this.socket.on('connect', this.onConnected)
     this.socket.on('exception', this.onException)
     this.socket.on('disconnect', this.onDisConnected)

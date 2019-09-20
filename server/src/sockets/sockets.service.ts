@@ -194,8 +194,11 @@ export class MessageService {
 
   }
 
-  getOdai(): string {
-    return this.odai[Math.floor(Math.random() * this.odai.length)]
+  getOdai(uuid: string): string {
+    const names = this.getRoomMembersNames(uuid)
+    const target = names[Math.floor(Math.random() * names.length)]
+
+    return this.odai[Math.floor(Math.random() * this.odai.length)].replace('<name>', target)
   }
 
   getNumberCard(): number {
@@ -221,7 +224,7 @@ export class MessageService {
     }
 
     for (let i = 0; i < room.numbers.length - 1; i++) {
-      if (room.numbers[i] < room.numbers[i + 1]) {
+      if (room.numbers[i] <= room.numbers[i + 1]) {
         continue
       }
       return false

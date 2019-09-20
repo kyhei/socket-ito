@@ -1,7 +1,7 @@
 <template>
   <section>
     <p>今回のお題は、、、</p>
-    <h2 class="subtitle is-3">{{ theme }}</h2>
+    <h2 class="subtitle is-4 mt8">{{ theme }}</h2>
   </section>
 </template>
 <script lang="ts">
