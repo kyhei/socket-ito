@@ -119,7 +119,9 @@ export default class RoomPage extends Vue {
   initializeSocket() {
     this.socket = io(`http://${location.hostname}:${SOCKETPORT}`)
     this.socket.on('join room', this.onJoinRoom)
+    this.socket.on('room not found', this.onRoomNotFound)
     this.socket.on('connect', this.onConnected)
+    this.socket.on('reconnect', this.onReConnected)
     this.socket.on('exception', this.onException)
     this.socket.on('disconnect', this.onDisConnected)
     this.socket.on('left room', this.onLeave)
@@ -205,6 +207,18 @@ export default class RoomPage extends Vue {
     })
   }
 
+  onRoomNotFound() {
+    this.messages.push({
+      id: this.messages.length + 1,
+      content: `指定されたルームが見つかりませんでした。`,
+      date: new Date().toISOString().slice(0.19)
+    })
+
+    setTimeout(() => {
+      this.$router.push('/rooms')
+    }, 3000)
+  }
+
   onGetRoomMembers(memberNames: string[]) {
     for (const memberName of memberNames) {
       this.messages.push({
@@ -217,6 +231,18 @@ export default class RoomPage extends Vue {
 
   onConnected() {
     console.log('Connected')
+  }
+
+  onReConnected(attemptNumber: number) {
+    console.log('Re Connected')
+    if (this.socket === null) {
+      return
+    }
+
+    this.socket.emit('join room', {
+      roomUuid: this.roomUuid,
+      nickName: this.nickName
+    })
   }
 
   onDisConnected() {

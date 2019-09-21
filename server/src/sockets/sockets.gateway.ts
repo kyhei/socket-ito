@@ -61,6 +61,7 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   @SubscribeMessage('join room')
   async subscribeJoinRoom(socket: Socket, params: { roomUuid: string, nickName: string }) {
     if (!this.messageService.isExistRoom(params.roomUuid)) {
+      socket.emit('room not found')
       return 'room is not found'
     }
 

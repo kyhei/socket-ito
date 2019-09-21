@@ -43,12 +43,12 @@ export class MessageService {
   }
 
   joinRoom(uuid: string, user: User) {
-    const room = this.rooms.find(item => item.uuid === uuid)
-    if (!room) {
+    const roomIndex = this.rooms.findIndex(item => item.uuid === uuid)
+    if (roomIndex === -1) {
       return
     }
 
-    room.users[user.cliendId] = {
+    this.rooms[roomIndex].users[user.cliendId] = {
       nickName: user.nickName,
       ready: false,
       put: false,
