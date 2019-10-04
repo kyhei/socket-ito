@@ -69,6 +69,12 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     socket.to(params.roomUuid).broadcast.emit('join room', params.nickName)
     socket.emit('get room members', this.messageService.getRoomMembersNames(params.roomUuid))
 
+    this.messageService.createMessage({
+      roomUuid: params.roomUuid,
+      name: params.nickName,
+      content: `${params.nickName}さんが入室しました。`,
+    })
+
     this.messageService.joinRoom(
       params.roomUuid,
       {
@@ -100,6 +106,12 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
     const nickName = this.messageService.setReadyUser(roomUuid, socket.id)
     this.server.to(roomUuid).emit('user ready', nickName)
 
+    this.messageService.createMessage({
+      roomUuid,
+      name: nickName,
+      content: `${nickName}}さんの準備が整いました。`,
+    })
+
     if (this.messageService.isAllUsersAreReady(roomUuid)) {
       this.server.to(roomUuid).emit('game start', this.messageService.getOdai(roomUuid))
       this.messageService.changeRoomCondition(roomUuid, 'playing')
@@ -116,6 +128,12 @@ export class EventGateway implements OnGatewayConnection, OnGatewayDisconnect {
   async subscribePutNumberCard(socket: Socket, params: { roomUuid: string, num: number }) {
     const nickName = this.messageService.putNumberCard(params.roomUuid, socket.id, params.num)
     this.server.to(params.roomUuid).emit('put number card', nickName)
+
+    this.messageService.createMessage({
+      roomUuid: params.roomUuid,
+      name: nickName,
+      content: `${nickName}}さんがカードを出しました。`,
+    })
 
     if (this.messageService.isAllUsersArePut(params.roomUuid)) {
       this.server.to(params.roomUuid).emit('game end', {

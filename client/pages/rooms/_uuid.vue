@@ -243,6 +243,21 @@ export default class RoomPage extends Vue {
       roomUuid: this.roomUuid,
       nickName: this.nickName
     })
+
+    this.socket.emit(
+      'fetch all messages',
+      this.roomUuid,
+      (messages: Message[]) => {
+        console.log('message received')
+        for (const message of messages) {
+          this.messages.push({
+            id: this.messages.length + 1,
+            content: message.content,
+            date: message.date
+          })
+        }
+      }
+    )
   }
 
   onDisConnected() {

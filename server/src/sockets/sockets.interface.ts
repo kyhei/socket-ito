@@ -11,10 +11,6 @@ export class createMessageDto {
 
   @IsNotEmpty()
   @IsString()
-  date: string
-
-  @IsNotEmpty()
-  @IsString()
   roomUuid: string
 }
 
@@ -38,6 +34,7 @@ export interface Room {
   }
   cond: 'before' | 'playing' | 'end'
   numbers: number[]
+  odaiIndexs: number[]
 }
 
 export interface User {

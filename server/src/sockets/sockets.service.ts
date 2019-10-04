@@ -1,21 +1,13 @@
 import { Injectable } from '@nestjs/common'
 import { createMessageDto, Message, Room, User } from './sockets.interface'
 import { odai } from './sockets.odai'
+import { makeShuffledArray } from '../common/functions'
 
 @Injectable()
 export class MessageService {
   private readonly messages: Message[] = []
   private readonly rooms: Room[] = []
   private readonly odai = odai
-
-  create(messageDto: createMessageDto) {
-    this.messages.push({
-      id: this.messages.length + 1,
-      name: messageDto.name,
-      content: messageDto.content,
-      date: messageDto.date,
-    })
-  }
 
   createMessage(messageDto: createMessageDto) {
     const roomIndex = this.rooms.findIndex(room => room.uuid === messageDto.roomUuid)
@@ -26,7 +18,7 @@ export class MessageService {
       id: this.rooms[roomIndex].messages.length + 1,
       name: this.getUserNickName(messageDto.roomUuid, messageDto.name),
       content: messageDto.content,
-      date: messageDto.date,
+      date: this.generateDateString(),
     })
   }
 
@@ -39,6 +31,7 @@ export class MessageService {
       users: {},
       cond: 'before',
       numbers: [],
+      odaiIndexs: [],
     })
   }
 
@@ -196,9 +189,18 @@ export class MessageService {
 
   getOdai(uuid: string): string {
     const names = this.getRoomMembersNames(uuid)
-    const target = names[Math.floor(Math.random() * names.length)]
+    const target = makeShuffledArray<string>(names).pop()
 
-    return this.odai[Math.floor(Math.random() * this.odai.length)].replace('<name>', target)
+    const roomIndex = this.rooms.findIndex(room => room.uuid === uuid)
+    if (roomIndex === -1) {
+      return ''
+    }
+
+    if (this.rooms[roomIndex].odaiIndexs.length === 0) {
+      this.rooms[roomIndex].odaiIndexs = makeShuffledArray(this.odai.length)
+    }
+
+    return this.odai[this.rooms[roomIndex].odaiIndexs.pop()].replace('<name>', target)
   }
 
   getNumberCard(): number {
@@ -275,6 +277,7 @@ export class MessageService {
 
       this.rooms[roomIndex].users[clientId].ready = false
       this.rooms[roomIndex].users[clientId].put = false
+      this.rooms[roomIndex].messages = []
     }
   }
 
@@ -302,5 +305,9 @@ export class MessageService {
       }
     }
     return chars.join('')
+  }
+
+  private generateDateString(): string {
+    return new Date().toISOString().slice(0, 19).replace('T', ' ')
   }
 }
