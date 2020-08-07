@@ -26,7 +26,7 @@
     "@nestjs/serve-static": "^1.0.1",
     "@nestjs/websockets": "^6.6.7",
     "@types/socket.io": "^2.1.2",
-    "class-transformer": "^0.2.3",
+    "class-transformer": "^0.3.1",
     "class-validator": "^0.10.0",
     "consola": "^2.10.1",
     "reflect-metadata": "^0.1.12",
